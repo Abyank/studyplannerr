@@ -112,11 +112,21 @@ async function generatePlan() {
   const topic = document.getElementById("planTopic").value;
   const hours = document.getElementById("hours").value;
   if (!topic || !hours) return alert("Enter both fields.");
+
   document.getElementById("planOut").innerText = "Generating...";
-  const out = await askAI(`Create a ${hours}-hour structured study plan for ${topic}`);
-  document.getElementById("planOut").innerText = out;
+
+  const raw = await askAI(`Create a ${hours}-hour structured study plan for ${topic}. Break it into clear steps or hour-by-hour tasks.`);
+  const lines = raw.split(/\n+/);
+
+  let html = "";
+  for (let l of lines) {
+    if (l.trim() === "") continue;
+    html += `<div class='flash-box'>${l}</div>`;
+  }
+
+  document.getElementById("planOut").innerHTML = html;
 }
 </script>
-<p style="text-align: center; opacity: 0.5;"> made by abyan,1st year project </p>
+
 </body>
 </html>
