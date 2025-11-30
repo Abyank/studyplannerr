@@ -17,6 +17,8 @@
     .option:hover { background:#ddd; }
     .correct { background:#8aff8a !important; }
     .wrong { background:#ff8a8a !important; }
+    /* Added style for the new footer text */
+    .footer { text-align: center; padding: 20px 0; font-size: 0.9em; color: #555; }
   </style>
 </head>
 <body>
@@ -51,7 +53,7 @@
 <script>
 async function askAI(prompt) {
   const encoded = encodeURIComponent(prompt);
-  const url = `https://text.pollinations.ai/${encoded}`;
+  const url = `text.pollinations.ai{encoded}`;
   const res = await fetch(url);
   return await res.text();
 }
@@ -117,6 +119,9 @@ async function generatePlan() {
   document.getElementById("planOut").innerText = out;
 }
 </script>
-<p text-align: center;>made by abyan, 1st year project</p>
+
+
+<p class="footer">made by abyan, 1st year project</p>
+
 </body>
 </html>
