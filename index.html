@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Study Planner</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #fdfdfd; color: #000; }
+    .header { padding: 20px; text-align: center; background: #1e293b; color: #f0f0f0; font-size: 28px; font-weight: bold; border: 3px solid #000; }
+    .container { max-width: 900px; margin: auto; padding: 20px; }
+    .card { background: #adebb3; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #000; }
+    input { width: 97%; padding: 10px; margin-top: 10px; border-radius: 22px; border: 3px solid #000; background: #fff; color: #000; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; background: #000; color: white; cursor: pointer; margin-top: 10px; }
+    .btn:hover { background: #6d28d9; }
+    .output { margin-top: 10px; background: #629b5b; padding: 12px; border-radius: 8px; white-space: pre-wrap; border: 2px solid #000; color: #fff; }
+    .quiz-box, .flash-box { background: #ffffff; color:#000; border:2px solid #000; padding:15px; margin-bottom:10px; border-radius:10px; }
+    .option { margin:6px 0; padding:8px; border:2px solid #000; border-radius:6px; background:#eee; cursor:pointer; }
+    .option:hover { background:#ddd; }
+    .correct { background:#8aff8a !important; }
+    .wrong { background:#ff8a8a !important; }
+  </style>
+</head>
+<body>
+
+<div class="header">Study Planner</div>
+<div class="container">
+
+  <div class="card">
+    <h2>Flashcard Generator</h2>
+    <input id="flashTopic" placeholder="Enter topic (e.g., Photosynthesis)">
+    <button class="btn" onclick="generateFlashcards()">Generate Flashcards</button>
+    <div id="flashOut" class="output"></div>
+  </div>
+
+  <div class="card">
+    <h2>Quiz Generator</h2>
+    <input id="quizTopic" placeholder="Enter quiz topic">
+    <button class="btn" onclick="generateQuiz()">Generate Quiz</button>
+    <div id="quizOut" class="output"></div>
+  </div>
+
+  <div class="card">
+    <h2>Study Plan Generator</h2>
+    <input id="planTopic" placeholder="Subject (e.g., Chemistry)">
+    <input id="hours" type="number" placeholder="Hours" min="1">
+    <button class="btn" onclick="generatePlan()">Generate Study Plan</button>
+    <div id="planOut" class="output"></div>
+  </div>
+
+</div>
+
+<script>
+async function askAI(prompt) {
+  const encoded = encodeURIComponent(prompt);
+  const url = `https://text.pollinations.ai/${encoded}`;
+  const res = await fetch(url);
+  return await res.text();
+}
+
+async function generateFlashcards() {
+  const topic = document.getElementById("flashTopic").value;
+  if (!topic) return alert("Enter a topic.");
+  document.getElementById("flashOut").innerText = "Generating...";
+  let raw = await askAI(`Create 5 flashcards about ${topic} in Q: / A: format`);
+
+  const lines = raw.split(/\n+/);
+  let html = "";
+  for (let l of lines) {
+    if (l.trim() === "") continue;
+    html += `<div class='flash-box'>${l}</div>`;
+  }
+  document.getElementById("flashOut").innerHTML = html;
+}
+
+async function generateQuiz() {
+  const topic = document.getElementById("quizTopic").value;
+  if (!topic) return alert("Enter a topic.");
+  document.getElementById("quizOut").innerText = "Generating...";
+
+  let raw = await askAI(`Create a 5-question multiple-choice quiz on ${topic} with this exact format: Q: question | A: option1 | B: option2 | C: option3 | D: option4 | ANSWER: X`);
+
+  let questions = raw.split(/Q:/).slice(1);
+  let html = "";
+
+  questions.forEach((q, index) => {
+    const parts = q.trim().split(/ANSWER:/);
+    const body = parts[0].trim();
+    const answer = parts[1] ? parts[1].trim()[0] : null;
+
+    const seg = body.split("|").map(s => s.trim());
+
+    html += `<div class='quiz-box'>
+      <div><b>Question ${index + 1}:</b> ${seg[0].replace(/^question/i, '')}</div>
+      <div class='option' onclick="checkAns(this,'A','${answer}')">${seg[1]}</div>
+      <div class='option' onclick="checkAns(this,'B','${answer}')">${seg[2]}</div>
+      <div class='option' onclick="checkAns(this,'C','${answer}')">${seg[3]}</div>
+      <div class='option' onclick="checkAns(this,'D','${answer}')">${seg[4]}</div>
+    </div>`;
+  });
+
+  document.getElementById("quizOut").innerHTML = html;
+}
+
+function checkAns(el, choice, correct) {
+  if (choice === correct) {
+    el.classList.add('correct');
+  } else {
+    el.classList.add('wrong');
+  }
+}
+
+async function generatePlan() {
+  const topic = document.getElementById("planTopic").value;
+  const hours = document.getElementById("hours").value;
+  if (!topic || !hours) return alert("Enter both fields.");
+  document.getElementById("planOut").innerText = "Generating...";
+  const out = await askAI(`Create a ${hours}-hour structured study plan for ${topic}`);
+  document.getElementById("planOut").innerText = out;
+}
+</script>
+
+</body>
+</html>
